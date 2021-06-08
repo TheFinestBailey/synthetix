@@ -1,4 +1,5 @@
 const ethers = require('ethers');
+const { artifacts } = require('hardhat');
 const { assert } = require('../../contracts/common');
 const { toBytes32 } = require('../../../index');
 const { ensureBalance } = require('../utils/balances');
@@ -18,17 +19,19 @@ function itCanShort({ ctx }) {
 		let user;
 		let CollateralShort, SynthsUSD;
 
-		before('target contracts and users', () => {
+		before('target contracts and users and ensure the user has sUSD', async () => {
 			({ CollateralShort, SynthsUSD } = ctx.contracts);
 
 			user = ctx.users.someUser;
-		});
 
-		before('ensure the user has sUSD', async () => {
 			await ensureBalance({ ctx, symbol: 'sUSD', user: user, balance: sUSDAmount });
+
+			CollateralStateContract = await artifacts
+				.require('CollateralState')
+				.at(await CollateralShort.state());
 		});
 
-		describe('open and close a short', () => {
+		describe('open and close a short', async () => {
 			let tx, loan, loanId;
 
 			describe('opening a loan', () => {
